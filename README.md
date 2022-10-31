@@ -1,2 +1,1 @@
-# api_yamdb
-api_yamdb
+# Сверхинновационное приложение api_yamdb
