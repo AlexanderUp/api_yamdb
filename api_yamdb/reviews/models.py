@@ -18,18 +18,6 @@ class Category(models.Model):
         return obj.pk
 
 
-class Genre(models.Model):
-    name = models.CharField(max_length=50)
-    slug = models.SlugField(max_length=50)
-
-    class Meta:
-        verbose_name = 'Жанр'
-        verbose_name_plural = 'Жанры'
-    
-    def __str__(self):
-        return self.name
-
-
 class Title(models.Model):
     name = models.CharField(max_length=150)
     year = models.PositiveSmallIntegerField()
@@ -38,11 +26,21 @@ class Title(models.Model):
         on_delete=models.SET_DEFAULT,
         default = Category.get_default_pk
         )
-    genre = models.ManyToManyField(Genre)
     
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+    
+    def __str__(self):
+        return self.name
+
+class Genre(models.Model):
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(max_length=50)
+    title = models.ManyToManyField(Title)
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
     
     def __str__(self):
         return self.name
