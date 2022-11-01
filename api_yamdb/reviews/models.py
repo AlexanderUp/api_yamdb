@@ -36,7 +36,7 @@ class Title(models.Model):
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True)
     title = models.ManyToManyField(Title)
     class Meta:
         verbose_name = 'Жанр'
