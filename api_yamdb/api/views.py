@@ -12,7 +12,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'category__slug', 'genre__slug')
+    filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
