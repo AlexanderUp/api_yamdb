@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from api_yamdb.reviews.models import Genre
 from datetime import datetime as dt
 
-from reviews.models import Category, Title
+from reviews.models import Category, Genre, Title
 
 
 class TitleSerializer(serializers.ModelSerializer):
