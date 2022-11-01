@@ -27,6 +27,7 @@ class Title(models.Model):
         on_delete=models.SET_DEFAULT,
         default=Category.get_default_pk
     )
+    description = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-year']
