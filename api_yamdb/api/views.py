@@ -5,9 +5,11 @@ from reviews.models import Category, Comment, Genre, Review, Title, User
 from rest_framework import viewsets, mixins
 from rest_framework import viewsets, filters, mixins
 from .serializers import CommentSerializer, GenreSerializer, ReviewSerializer
-from .serializers import UserSerializer, CategorySerializer
-from .permissions import IsAdmin, ReadOnly, AuthorAdminModeratorOrReadOnly
+from .serializers import UserSerializer, CategorySerializer, TitleSerializer
+from .permissions import IsAdmin, ReadOnly, IsAdminOrReadOnly
 # from .serializers import TitleSerializer
+from rest_framework.pagination import LimitOffsetPagination
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -25,11 +27,6 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
-
-class TitleViewSet(viewsets.ModelViewSet):
-    # query = Title.objects.all()
-    # serializer = TitleSerializer
-    pass
 
 class CategoryViewSet(CreateListDestroyViewSet):
     queryset = Category.objects.all()
@@ -50,6 +47,21 @@ class GenreViewSet(CreateListDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
+
+class TitleViewSet(viewsets.ModelViewSet):
+    query = Title.objects.all()
+    serializer = TitleSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    query = Category.objects.all()
+    serializer = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    http_method_names = ['get', 'post', 'del']
 
 class ReviewViewSet(RecordViewSet):
     serializer_class = ReviewSerializer

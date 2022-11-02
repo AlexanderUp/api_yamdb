@@ -13,15 +13,16 @@ class User(AbstractUser):
 class Category(models.Model):
     """Категории (типы) произведений."""
     name = models.CharField(max_length=50)
-    slug = models.SlugField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True)
 
     class Meta:
+        ordering = ['name']
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-    
+
     def __str__(self):
         return self.name
-    
+
     @classmethod
     def get_default_pk(cls):
         obj, created = cls.objects.get_or_create(name='No category')
@@ -30,15 +31,17 @@ class Category(models.Model):
 
 class Title(models.Model):
     """Произведения, к которым пишут отзывы (определённый фильм, книга или песенка)."""
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=256)
     year = models.PositiveSmallIntegerField()
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_DEFAULT,
         default=Category.get_default_pk
         )
+    description = models.TextField(blank=True)
 
     class Meta:
+        ordering = ['-year']
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -48,7 +51,7 @@ class Title(models.Model):
 
 class Genre(models.Model):
     """Категории жанров."""
-    name = models.CharField(max_length=50, verbose_name='Жанр')
+    name = models.CharField(max_length=256, verbose_name='Жанр')
     slug = models.SlugField(max_length=50, verbose_name='Идентификатор', unique=True)
     title = models.ManyToManyField(Title)
 

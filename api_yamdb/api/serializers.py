@@ -1,9 +1,9 @@
 #!/api_yamdb/api_yamdb/api/serializers.py
 """All Serializers."""
+from datetime import datetime as dt
 from django.shortcuts import get_object_or_404
 from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
-
 from reviews.models import User, Title, Genre, Category, Review, Comment
 
 
@@ -23,8 +23,21 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        fields = ('id', 'name', 'slug')
         lookup_field = 'slug'
+
+
+class TitleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'category')
+
+    def validate(self, data):
+        if data['year'] < dt.now().year:
+            raise serializers.ValidationError(
+                'Год выпуска не может быть больше текущего!')
+        return data
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -33,10 +46,6 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ('name', 'slug')
         lookup_field = 'slug'
-
-
-class TitleGetSerializer(serializers.ModelSerializer):
-    pass
 
 
 class TitlePostSerializer(serializers.ModelSerializer):
