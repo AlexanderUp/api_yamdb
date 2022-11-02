@@ -1,22 +1,19 @@
 #!/api_yamdb/api_yamdb/api/views.py
 """All views and ViewSets."""
-from django.shortcuts import render
-from reviews.models import Category, Comment, Genre, Review, Title, User
-from rest_framework import viewsets, mixins
-from rest_framework import viewsets, filters, mixins
-from .serializers import CommentSerializer, GenreSerializer, ReviewSerializer
-from .serializers import UserSerializer, CategorySerializer, TitleSerializer
-from .permissions import IsAdmin, ReadOnly, IsAdminOrReadOnly
-# from .serializers import TitleSerializer
-from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, mixins, filters
+from rest_framework.pagination import LimitOffsetPagination
 
+from .permissions import IsAdmin, ReadOnly, IsAdminOrReadOnly
+from .serializers import (CommentSerializer, GenreSerializer,
+                          ReviewSerializer, CategorySerializer,
+                          TitleSerializer)
+from reviews.models import Category, Comment, Genre, Review, Title
 
-class UserViewSet(viewsets.ModelViewSet):
-    pass
 
 class RecordViewSet(viewsets.ModelViewSet):
     pass
+
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.DestroyModelMixin,
@@ -26,11 +23,6 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-
-
-class CategoryViewSet(CreateListDestroyViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
 
 
 class CommentViewSet(RecordViewSet):
@@ -57,11 +49,17 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
 
 
+# class CategoryViewSet(CreateListDestroyViewSet):
+#     queryset = Category.objects.all()
+#     serializer_class = CategorySerializer
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     query = Category.objects.all()
     serializer = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'del']
+
 
 class ReviewViewSet(RecordViewSet):
     serializer_class = ReviewSerializer
