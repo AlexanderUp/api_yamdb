@@ -142,3 +142,8 @@ LOGGING = {
         }
     }
 }
+
+# Length in chars twice larger in hex representation
+CONFIRMATION_CODE_BYTE_SIZE = 8
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
