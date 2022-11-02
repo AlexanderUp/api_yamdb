@@ -1,9 +1,51 @@
-from reviews.models import Category, Genre, Title
-from rest_framework import viewsets
+#!/api_yamdb/api_yamdb/api/views.py
+"""All views and ViewSets."""
+from django.shortcuts import render
+from reviews.models import Category, Comment, Genre, Review, Title, User
+from rest_framework import viewsets, mixins
+from rest_framework import viewsets, filters, mixins
+from .serializers import CommentSerializer, GenreSerializer, ReviewSerializer
+from .serializers import UserSerializer, CategorySerializer, TitleSerializer
+from .permissions import IsAdmin, ReadOnly, IsAdminOrReadOnly
+# from .serializers import TitleSerializer
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
-from .permissions import IsAdminOrReadOnly
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    pass
+
+class RecordViewSet(viewsets.ModelViewSet):
+    pass
+
+class CreateListDestroyViewSet(mixins.CreateModelMixin,
+                               mixins.DestroyModelMixin,
+                               mixins.ListModelMixin,
+                               viewsets.GenericViewSet):
+    permission_classes = [IsAdmin | ReadOnly]
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class CategoryViewSet(CreateListDestroyViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class CommentViewSet(RecordViewSet):
+    serializer_class = CommentSerializer
+    base_model = Review
+    id_name = "review_id"
+    record_name = "review"
+
+    def get_queryset(self):
+        return self.get_base_record().comments.all()
+
+
+class GenreViewSet(CreateListDestroyViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -21,9 +63,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'del']
 
+class ReviewViewSet(RecordViewSet):
+    serializer_class = ReviewSerializer
+    base_model = Title
+    id_name = "title_id"
+    record_name = "title"
 
-class GenreViewSet(viewsets.ModelViewSet):
-    query = Genre.objects.all()
-    serializer = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    http_method_names = ['get', 'post', 'del']
+    def get_queryset(self):
+        return self.get_base_record().reviews.all()
