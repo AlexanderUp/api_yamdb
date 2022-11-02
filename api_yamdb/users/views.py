@@ -12,7 +12,7 @@ User = get_user_model()
 
 class UserCreationApiView(CreateAPIView):
     """
-    User creation by admin with no confirmation code sending.
+    User creation by admin with no confirmation code sended.
     """
     queryset = User.objects.all()
     serializer_class = UserCreationSerializer
@@ -30,12 +30,13 @@ class UserSignupAPIView(APIView):
         serializer = UserSignupSerializer(data=request.data)
 
         if serializer.is_valid():
-            email = serializer.data.get("email")
-            username = serializer.data.get("username")
 
             if User.objects.filter(**serializer.data).exists():
                 user = User.objects.get(**serializer.data)
             else:
+                email = serializer.data.get("email")
+                username = serializer.data.get("username")
+
                 if any(
                     (
                         User.objects.filter(email=email).exists(),

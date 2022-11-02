@@ -1,22 +1,12 @@
 #!/api_yamdb/api_yamdb/api/serializers.py
 """All Serializers."""
 from datetime import datetime as dt
+
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
-from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
-from reviews.models import User, Title, Genre, Category, Review, Comment
 
-
-class UserSerializer(serializers.ModelSerializer):
-    pass
-
-
-class SignupSerializer(serializers.Serializer):
-    pass
-
-
-class TokenSerializer(serializers.Serializer):
-    pass
+from reviews.models import Category, Comment, Genre, Review, Title  # isort:skip
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -36,7 +26,8 @@ class TitleSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['year'] < dt.now().year:
             raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего!')
+                'Год выпуска не может быть больше текущего!'
+            )
         return data
 
 
@@ -74,14 +65,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         title = get_object_or_404(Title, pk=title_id)
         user = self.context['request'].user
         if Review.objects.filter(title=title, author=user).exists():
-            raise serializers.ValidationError('Можно оставить только один отзыв на произведение')
+            raise serializers.ValidationError(
+                'Можно оставить только один отзыв на произведение'
+            )
         return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
-        )
+    )
 
     class Meta:
         model = Comment

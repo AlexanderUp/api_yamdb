@@ -1,13 +1,10 @@
 #!/api_yamdb/api_yamdb/reviews/models.py
 """All models."""
-from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-
-class User(AbstractUser):
-    """Пользователи."""
-    pass
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -30,14 +27,16 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    """Произведения, к которым пишут отзывы (определённый фильм, книга или песенка)."""
+    """
+    Произведения, к которым пишут отзывы (определённый фильм, книга или песенка).
+    """
     name = models.CharField(max_length=256)
     year = models.PositiveSmallIntegerField()
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_DEFAULT,
         default=Category.get_default_pk
-        )
+    )
     description = models.TextField(blank=True)
 
     class Meta:
@@ -52,7 +51,8 @@ class Title(models.Model):
 class Genre(models.Model):
     """Категории жанров."""
     name = models.CharField(max_length=256, verbose_name='Жанр')
-    slug = models.SlugField(max_length=50, verbose_name='Идентификатор', unique=True)
+    slug = models.SlugField(
+        max_length=50, verbose_name='Идентификатор', unique=True)
     title = models.ManyToManyField(Title)
 
     class Meta:
@@ -101,6 +101,7 @@ class Review(models.Model):
         constraints = [models.UniqueConstraint(
             fields=['author', 'title'],
             name='only_one_review')]
+
 
 class Comment(models.Model):
     """Комментарии к отзывам."""

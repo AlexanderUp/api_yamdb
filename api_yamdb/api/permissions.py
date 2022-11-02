@@ -1,7 +1,7 @@
 #!/api_yamdb/api_yamdb/api/permissions.py
 """All permissions."""
 from rest_framework import permissions
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import BasePermission
 
 
 class IsAdmin(BasePermission):
@@ -16,7 +16,7 @@ class IsAdmin(BasePermission):
 
 class ReadOnly(BasePermission):
     def has_permission(self, request, view):
-        return request.method in SAFE_METHODS
+        return request.method in permissions.SAFE_METHODS
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
