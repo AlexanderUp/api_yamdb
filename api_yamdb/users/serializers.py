@@ -14,18 +14,20 @@ class UserCreationSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
                 fields=("email", "username"),
-                message="Credentials rejected"
+                message="User already exists."
             )
         ]
 
     def validate_username(self, value):
         if value == "me" or User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Prohibited username.")
+            raise serializers.ValidationError(
+                "Username already exists or prohibited."
+            )
         return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Prohibited email.")
+            raise serializers.ValidationError("Email already exists.")
         return value
 
     def create(self, validated_data):
