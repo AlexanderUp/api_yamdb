@@ -1,16 +1,15 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from .models import User
+from .models import USER_ROLE_CHOICES, User
 
 
-class UserSignupSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    username = serializers.CharField(max_length=150)
+class UserCreationSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=USER_ROLE_CHOICES, required=False)
 
     class Meta:
         model = User
-        fields = ("email", "username")
+        fields = ("email", "username", "role")
         validators = [
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
@@ -31,3 +30,13 @@ class UserSignupSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # type:ignore
+
+
+class UserSignupSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    username = serializers.CharField(max_length=150)
+
+    def validate_username(self, value):
+        if value == "me":
+            raise serializers.ValidationError("Prohibited username.")
+        return value
