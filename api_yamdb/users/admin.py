@@ -4,7 +4,7 @@ from .models import User
 
 
 class UserConfig(admin.ModelAdmin):
-    list_display = ("pk", "username", "email", "role")
+    list_display = ("pk", "username", "email", "role", "confirmation_code",)
     empty_value_display = "-пусто-"
 
 

@@ -11,7 +11,7 @@ class UserSignupSerializer(serializers.Serializer):
     class Meta:
         model = User
         fields = ("email", "username")
-        constraints = [
+        validators = [
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
                 fields=("email", "username"),
@@ -19,9 +19,15 @@ class UserSignupSerializer(serializers.Serializer):
             )
         ]
 
-    def validata_username(self, value):
-        if value == "me":
+    def validate_username(self, value):
+        if value == "me" or User.objects.filter(username=value).exists():
             raise serializers.ValidationError("Prohibited username.")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Prohibited email.")
+        return value
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # type:ignore
