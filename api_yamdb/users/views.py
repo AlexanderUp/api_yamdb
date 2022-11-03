@@ -1,10 +1,13 @@
 from django.contrib.auth import get_user_model
-from rest_framework import permissions, status
-from rest_framework.generics import CreateAPIView
+from django.shortcuts import get_object_or_404
+from rest_framework import permissions, status, viewsets
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import UserCreationSerializer, UserSignupSerializer
+from .serializers import (UserCreationSerializer, UserSerializer,
+                          UserSignupSerializer, UserTokenObtainingSerializer)
 from .utils import send_confirmation_code
 
 User = get_user_model()
@@ -16,7 +19,7 @@ class UserCreationApiView(CreateAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserCreationSerializer
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     # permission_classes = (permissions.IsAdminUser,)
 
 
@@ -55,3 +58,48 @@ class UserSignupAPIView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TokenObtainAPIView(APIView):
+    """
+    Obtaining authorization token with email and confirmation_code provided.
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        serializer = UserTokenObtainingSerializer(data=request.data)
+        if serializer.is_valid():
+            user = get_object_or_404(
+                User,
+                username=serializer.data.get("username"),
+                confirmation_code=serializer.data.get("confirmation_code")
+            )
+            refresh_token = RefreshToken.for_user(user)
+            resp = {
+                "token": str(refresh_token.access_token)
+            }
+            return Response(
+                resp, status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    User viewset.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = "username"
+    # permission_classes = (permissions.IsAdminUser,)
+    http_method_names = ["get", "post", "patch", "delete", ]
+
+
+class UserAPIView(RetrieveUpdateAPIView):
+    # permission_classes
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return get_object_or_404(
+            User, username=self.request.user.username
+        )
