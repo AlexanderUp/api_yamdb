@@ -9,8 +9,9 @@ class IsAdmin(BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
+        is_admin = request.user.role == 'admin'
         return (
-            user.is_authenticated and user.is_admin
+            user.is_authenticated and is_admin
         )
 
 
