@@ -1,16 +1,9 @@
 from django.core.management.base import BaseCommand
-from reviews.models import Category, Genre, Title
 import sqlite3
 from pathlib import Path
-from django.db.utils import IntegrityError
 import pandas
 
 DIR_PATH = Path.cwd()
-
-MODELS_DICT = {'category': Category,
-               'genre': Genre,
-               'titles': Title,
-               }
 
 
 class Command(BaseCommand):
