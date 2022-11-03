@@ -41,22 +41,17 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    query = Title.objects.all()
-    serializer = TitleSerializer
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
 
 
-# class CategoryViewSet(CreateListDestroyViewSet):
-#     queryset = Category.objects.all()
-#     serializer_class = CategorySerializer
-
-
 class CategoryViewSet(viewsets.ModelViewSet):
-    query = Category.objects.all()
-    serializer = CategorySerializer
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'del']
 
