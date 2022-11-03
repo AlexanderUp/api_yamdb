@@ -4,12 +4,11 @@ from rest_framework.validators import UniqueTogetherValidator
 from .models import USER_ROLE_CHOICES, User
 
 
-class UserCreationSerializer(serializers.ModelSerializer):
+class UserBaseSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=USER_ROLE_CHOICES, required=False)
 
     class Meta:
         model = User
-        fields = ("email", "username", "role")
         validators = [
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
@@ -34,6 +33,19 @@ class UserCreationSerializer(serializers.ModelSerializer):
         return User.objects.create_user(**validated_data)  # type:ignore
 
 
+class UserSerializer(UserBaseSerializer):
+
+    class Meta(UserBaseSerializer.Meta):
+        fields = ("username", "email", "first_name",
+                  "last_name", "bio", "role")
+
+
+class UserCreationSerializer(UserBaseSerializer):
+
+    class Meta(UserBaseSerializer.Meta):
+        fields = ("email", "username", "role",)
+
+
 class UserSignupSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField(max_length=150)
@@ -42,3 +54,18 @@ class UserSignupSerializer(serializers.Serializer):
         if value == "me":
             raise serializers.ValidationError("Prohibited username.")
         return value
+
+
+class UserTokenObtainingSerializer(serializers.ModelSerializer):
+    username = serializers.SlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all()
+    )
+    confirmation_code = serializers.SlugRelatedField(
+        slug_field="confirmation_code",
+        queryset=User.objects.all()
+    )
+
+    class Meta:
+        model = User
+        fields = ("username", "confirmation_code",)

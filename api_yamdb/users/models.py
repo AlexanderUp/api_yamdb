@@ -35,12 +35,14 @@ class User(AbstractUser):
     )
     confirmation_code = models.CharField(
         max_length=16,
+        unique=True,
         default=set_confirmation_code,
         verbose_name="confirmation_code",
         help_text="Confirmation code"
     )
 
     class Meta(AbstractUser.Meta):
+        ordering = ("-id",)
         constraints = (
             models.UniqueConstraint(
                 fields=("email", "username"),
