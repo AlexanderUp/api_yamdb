@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, filters
 from rest_framework.pagination import LimitOffsetPagination
 
-from .permissions import IsAdmin, ReadOnly, IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly
 from .serializers import (CommentSerializer, GenreSerializer,
                           ReviewSerializer, CategorySerializer,
                           TitleSerializer)
@@ -19,7 +19,7 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.DestroyModelMixin,
                                mixins.ListModelMixin,
                                viewsets.GenericViewSet):
-    permission_classes = [IsAdmin | ReadOnly]
+    permission_classes = (IsAdminOrReadOnly,)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -38,6 +38,8 @@ class CommentViewSet(RecordViewSet):
 class GenreViewSet(CreateListDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -53,7 +55,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
     http_method_names = ['get', 'post', 'del']
+    search_fields = ('name',)
 
 
 class ReviewViewSet(RecordViewSet):
