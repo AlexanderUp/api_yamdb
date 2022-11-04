@@ -13,7 +13,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
         lookup_field = 'slug'
 
 
@@ -21,7 +21,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'category')
+        fields = ('name', 'year', 'description', 'category')
 
     def validate(self, data):
         if data['year'] < dt.now().year:
