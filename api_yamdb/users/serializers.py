@@ -1,49 +1,24 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
-from .models import USER_ROLE_CHOICES, User
+User = get_user_model()
 
 
-class UserBaseSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=USER_ROLE_CHOICES, required=False)
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=150)
 
     class Meta:
         model = User
-        validators = [
-            UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=("email", "username"),
-                message="User already exists."
-            )
-        ]
+        fields = ("username", "email", "first_name",
+                  "last_name", "bio", "role")
 
     def validate_username(self, value):
         if value == "me" or User.objects.filter(username=value).exists():
-            raise serializers.ValidationError(
-                "Username already exists or prohibited."
-            )
-        return value
-
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Email already exists.")
+            raise serializers.ValidationError("Username exists or prohibited.")
         return value
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # type:ignore
-
-
-class UserSerializer(UserBaseSerializer):
-
-    class Meta(UserBaseSerializer.Meta):
-        fields = ("username", "email", "first_name",
-                  "last_name", "bio", "role")
-
-
-class UserCreationSerializer(UserBaseSerializer):
-
-    class Meta(UserBaseSerializer.Meta):
-        fields = ("email", "username", "role",)
 
 
 class UserSignupSerializer(serializers.Serializer):

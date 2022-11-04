@@ -17,7 +17,7 @@ class User(AbstractUser):
         verbose_name="email",
         help_text="User's email",
         error_messages={
-            "unique": "A user with that username already exists.",
+            "unique": "A user with that email already exists.",
         },
     )
     bio = models.TextField(
