@@ -5,6 +5,7 @@ from .models import User
 
 class UserConfig(admin.ModelAdmin):
     list_display = ("pk", "username", "email", "role", "confirmation_code",)
+    list_editable = ('role',)
     empty_value_display = "-пусто-"
 
 
