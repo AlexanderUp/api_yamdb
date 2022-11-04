@@ -24,7 +24,7 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = ('name', 'year', 'description', 'category')
 
     def validate(self, data):
-        if data['year'] < dt.now().year:
+        if data['year'] > dt.now().year:
             raise serializers.ValidationError(
                 'Год выпуска не может быть больше текущего!'
             )
