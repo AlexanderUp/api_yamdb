@@ -4,10 +4,10 @@ from django.db import models
 from .utils import set_confirmation_code
 
 USER_ROLE_CHOICES = (
-    ("USER", "user"),
-    ("MODERATOR", "moderator"),
-    ("ADMIN", "admin"),
-    ("SUPERUSER", "superuser"),
+    ("user", "user"),
+    ("moderator", "moderator"),
+    ("admin", "admin"),
+    ("superuser", "superuser"),
 )
 
 
@@ -31,7 +31,7 @@ class User(AbstractUser):
         verbose_name="Role",
         help_text="User's role",
         choices=USER_ROLE_CHOICES,
-        default="USER"
+        default="user"
     )
     confirmation_code = models.CharField(
         max_length=16,

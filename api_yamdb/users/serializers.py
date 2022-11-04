@@ -57,14 +57,8 @@ class UserSignupSerializer(serializers.Serializer):
 
 
 class UserTokenObtainingSerializer(serializers.ModelSerializer):
-    username = serializers.SlugRelatedField(
-        slug_field="username",
-        queryset=User.objects.all()
-    )
-    confirmation_code = serializers.SlugRelatedField(
-        slug_field="confirmation_code",
-        queryset=User.objects.all()
-    )
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField(max_length=16)
 
     class Meta:
         model = User

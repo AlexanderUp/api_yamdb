@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .permissions import IsAdmin, IsSuperUser
 from .serializers import (UserCreationSerializer, UserSerializer,
                           UserSignupSerializer, UserTokenObtainingSerializer)
 from .utils import send_confirmation_code
@@ -47,16 +48,12 @@ class UserSignupAPIView(APIView):
                     )
                 ):
                     return Response(
-                        "Email or username already used",
-                        status=status.HTTP_400_BAD_REQUEST
+                        serializer.data, status=status.HTTP_400_BAD_REQUEST
                     )
                 user = (User.objects
                             .create_user(**serializer.data))  # type:ignore
             send_confirmation_code(user)
-            return Response(
-                "Confirmation code sent to email",
-                status=status.HTTP_200_OK
-            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -69,10 +66,21 @@ class TokenObtainAPIView(APIView):
     def post(self, request):
         serializer = UserTokenObtainingSerializer(data=request.data)
         if serializer.is_valid():
+            username = serializer.data.get("username")
+            confirmation_code = serializer.data.get("confirmation_code")
+
+            if not User.objects.filter(username=username).exists():
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            if not User.objects.filter(
+                confirmation_code=confirmation_code
+            ).exists():
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
             user = get_object_or_404(
                 User,
-                username=serializer.data.get("username"),
-                confirmation_code=serializer.data.get("confirmation_code")
+                username=username,
+                confirmation_code=confirmation_code
             )
             refresh_token = RefreshToken.for_user(user)
             resp = {
@@ -91,7 +99,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = "username"
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdmin,)
     http_method_names = ["get", "post", "patch", "delete", ]
 
 
@@ -100,6 +108,8 @@ class UserAPIView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
-        return get_object_or_404(
+        obj = get_object_or_404(
             User, username=self.request.user.username
         )
+        self.check_object_permissions(self.request, obj)
+        return obj
