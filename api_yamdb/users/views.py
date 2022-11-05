@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.generics import RetrieveUpdateAPIView
@@ -16,7 +17,7 @@ User = get_user_model()
 
 class UserSignupAPIView(APIView):
     """
-    Obtaining confirmation code (possibly with concurrent registrations)
+    Obtaining confirmation code (possibly with registration at the same time)
     by user.
     """
     permission_classes = (permissions.AllowAny,)
@@ -26,23 +27,17 @@ class UserSignupAPIView(APIView):
 
         if serializer.is_valid():
 
-            if User.objects.filter(**serializer.data).exists():
-                user = User.objects.get(**serializer.data)
+            try:
+                user, created = User.objects.get_or_create(**serializer.data)
+            except IntegrityError:
+                return Response(
+                    serializer.data, status=status.HTTP_400_BAD_REQUEST
+                )
             else:
-                email = serializer.data.get("email")
-                username = serializer.data.get("username")
+                if created:
+                    user.set_unusable_password()  # type:ignore
+                    user.save()
 
-                if any(
-                    (
-                        User.objects.filter(email=email).exists(),
-                        User.objects.filter(username=username).exists()
-                    )
-                ):
-                    return Response(
-                        serializer.data, status=status.HTTP_400_BAD_REQUEST
-                    )
-                user = (User.objects
-                            .create_user(**serializer.data))  # type:ignore
             send_confirmation_code(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -107,6 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class UserAPIView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
+    http_method_names = ["get", "patch"]
 
     def get_object(self):
         obj = get_object_or_404(

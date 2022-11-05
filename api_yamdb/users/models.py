@@ -1,7 +1,9 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
 from .utils import set_confirmation_code
+from .validators import me_username_validator
 
 USER_ROLE_CHOICES = (
     ("user", "user"),
@@ -12,6 +14,19 @@ USER_ROLE_CHOICES = (
 
 
 class User(AbstractUser):
+    username_validator = UnicodeUsernameValidator()
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name="username",
+        help_text=(
+            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+        ),
+        validators=[username_validator, me_username_validator],
+        error_messages={
+            "unique": "A user with that username already exists.",
+        },
+    )
     email = models.EmailField(
         unique=True,
         verbose_name="email",
