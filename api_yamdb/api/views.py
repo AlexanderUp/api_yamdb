@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, serializers, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 
 from .permissions import IsAdminOrReadOnly
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -74,11 +75,16 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     base_model = Review
-    id_name = "review_id"
-    record_name = "review"
+    id_name = 'review_id'
+    record_name = 'review'
 
     def get_queryset(self):
-        return self.get_base_record().comments.all()
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        queryset = get_object_or_404(Review, id=review_id)
+        new_queryset = queryset.comments.all()
+
+        return new_queryset
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -88,4 +94,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     record_name = "title"
 
     def get_queryset(self):
-        return self.get_base_record().reviews.all()
+        title_id = self.kwargs.get("title_id")
+        new_queryset = Review.objects.filter(title_id=title_id)
+        return new_queryset
