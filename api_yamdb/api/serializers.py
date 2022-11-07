@@ -1,6 +1,7 @@
 """All Serializers."""
 import sys
 from datetime import datetime as dt
+from collections import OrderedDict
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
@@ -36,7 +37,6 @@ class CategoryLightSerializer(CategorySerializer):
         data = {"slug": data}
         return super().to_internal_value(data)
 
-
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -62,7 +62,14 @@ class GenreLightSerializer(GenreSerializer):
 
     def to_internal_value(self, data):
         data = {"slug": data}
+
         return super().to_internal_value(data)
+        
+    def to_representation(self, data):
+        data = data
+        value = super().to_representation(data)
+       
+        return value['slug']
 
 
 class TitleSerializer(serializers.ModelSerializer):

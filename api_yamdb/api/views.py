@@ -88,4 +88,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     record_name = "title"
 
     def get_queryset(self):
-        return self.get_base_record().reviews.all()
+        title_id = self.kwargs.get("title_id")
+        new_queryset = Review.objects.filter(title_id=title_id)
+        return new_queryset

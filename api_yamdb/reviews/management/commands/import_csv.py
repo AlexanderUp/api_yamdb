@@ -12,6 +12,7 @@ User = get_user_model()
 DIR_PATH = settings.BASE_DIR
 
 MODELS = {
+    "user": User,
     "category": Category,
     "comment": Comment,
     "genre": Genre,
@@ -19,7 +20,8 @@ MODELS = {
     "title": Title,
 }
 
-TABLES = ["category", "genre", "title", "review", "comment", "genre_title"]
+TABLES = ["user", "category", "genre", "title",
+          "review", "comment", "genre_title"]
 
 
 class Command(BaseCommand):
