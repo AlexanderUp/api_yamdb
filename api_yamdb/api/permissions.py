@@ -7,15 +7,14 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     message = 'Пользователь не является администратором!'
 
     def has_permission(self, request, view):
-        is_admin = False
-        if not request.user.is_anonymous:
-            is_admin = request.user.role == 'admin'
-        if request.method in permissions.SAFE_METHODS or is_admin:
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user.is_authenticated and request.user.role == "admin":
             return True
         return False
 
     def has_object_permission(self, request, view, obj):
-        admin = request.user.role == 'admin'
-        if request.method in permissions.SAFE_METHODS or admin:
+        if (request.method in permissions.SAFE_METHODS
+                or request.user.role == 'admin'):
             return True
         return False

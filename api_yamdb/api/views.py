@@ -1,7 +1,7 @@
 #!/api_yamdb/api_yamdb/api/views.py
 """All views and ViewSets."""
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, serializers, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
@@ -50,6 +50,25 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def create(self, request, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(data=request.data)
+        if serializer.is_valid():
+            title_name = serializer.validated_data.get("name")
+            category_dict = serializer.validated_data.get("category")
+            category_slug = category_dict.get("slug")
+            import sys
+            print(">>> title, category >>", title_name,
+                  category_slug, file=sys.stderr)
+            if Title.objects.filter(
+                name=title_name, category__slug=category_slug
+            ).exists():
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

@@ -32,6 +32,10 @@ class CategoryLightSerializer(CategorySerializer):
             }
         }
 
+    def to_internal_value(self, data):
+        data = {"slug": data}
+        return super().to_internal_value(data)
+
 
 class GenreSerializer(serializers.ModelSerializer):
 
@@ -56,6 +60,10 @@ class GenreLightSerializer(GenreSerializer):
             }
         }
 
+    def to_internal_value(self, data):
+        data = {"slug": data}
+        return super().to_internal_value(data)
+
 
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreLightSerializer(many=True)
@@ -72,29 +80,51 @@ class TitleSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def validate(self, validated_data):
-        name = validated_data.get("name")
-        category = validated_data.get("category")
-        category_slug = category.get("slug")
+    # def validate(self, validated_data):
+    #     name = validated_data.get("name")
+    #     category = validated_data.get("category")
+    #     category_slug = category.get("slug")
 
-        if Title.objects.filter(name=name, category__slug=category_slug).exists():
-            raise serializers.ValidationError("Title already exists.")
-        return validated_data
+    #     if Title.objects.filter(name=name, category__slug=category_slug).exists():
+    #         raise serializers.ValidationError("Title already exists.")
+    #     return validated_data
 
     def create(self, validated_data):
         category_data = validated_data.pop("category")
         category_slug = category_data.get("slug")
         category = Category.objects.get(slug=category_slug)
+        print("********** category", category.slug, file=sys.stderr)
 
         genre_data = validated_data.pop("genre")
         genre_slug_list = [genre.get("slug") for genre in genre_data]
         genre_list = Genre.objects.filter(slug__in=genre_slug_list)
+        print("********** genre_list", genre_list, file=sys.stderr)
 
         title = Title.objects.create(**validated_data)
         title.category = category
         title.genre.set(genre_list)
         title.save()
+        print("********** title", title, file=sys.stderr)
+        print("********** title.genre", title.genre.all(), file=sys.stderr)
         return title
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get("name", instance.name)
+        instance.year = validated_data.get("year", instance.year)
+        instance.description = validated_data.get(
+            "description", instance.description)
+
+        genre_slug_list = [genre.get("slug")
+                           for genre in validated_data.get("genre")]
+        genres = Genre.objects.filter(slug__in=genre_slug_list)
+        instance.genre.set(genres)
+
+        category = validated_data.get("category")
+        category_slug = category.get("slug")
+        category = Category.objects.get(slug=category_slug)
+        instance.category = category
+        instance.save()
+        return instance
 
 
 class ReviewSerializer(serializers.ModelSerializer):
