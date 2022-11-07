@@ -1,18 +1,16 @@
 #!/api_yamdb/api_yamdb/api/permissions.py
 """All permissions."""
 from rest_framework import permissions
-from rest_framework.permissions import BasePermission
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     message = 'Пользователь не является администратором!'
 
     def has_permission(self, request, view):
+        is_admin = False
         if not request.user.is_anonymous:
-            admin = request.user.role == 'admin'
-        else:
-            admin = False
-        if request.method in permissions.SAFE_METHODS or admin:
+            is_admin = request.user.role == 'admin'
+        if request.method in permissions.SAFE_METHODS or is_admin:
             return True
         return False
 
