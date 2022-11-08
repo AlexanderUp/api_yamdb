@@ -1,24 +1,23 @@
-#!/api_yamdb/api_yamdb/api/views.py
 """All views and ViewSets."""
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, serializers, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from .permissions import IsAdminOrReadOnly
+from .filters import GenreFilter
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer)
 
-from reviews.models import Category, Comment, Genre, Review, Title  # isort:skip
+from reviews.models import Category, Genre, Review, Title  # isort:skip
+from users.permissions import CanPostAndEdit, IsAdminOrReadOnly  # isort:skip
 
 
 class NoRetrieveModelViewSet(viewsets.ModelViewSet):
 
-    def partial_update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
     def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        msg_dict = {"detail": "Method \"GET\" not allowed."}
+        return Response(msg_dict, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class GenreViewSet(NoRetrieveModelViewSet):
@@ -26,6 +25,7 @@ class GenreViewSet(NoRetrieveModelViewSet):
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
     lookup_field = "slug"
+    http_method_names = ['get', 'post', 'delete']
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
@@ -49,43 +49,48 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
+    filterset_class = GenreFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
-
-    def create(self, request, *args, **kwargs):
-        serializer_class = self.get_serializer_class()
-        serializer = serializer_class(data=request.data)
-        if serializer.is_valid():
-            title_name = serializer.validated_data.get("name")
-            category_dict = serializer.validated_data.get("category")
-            category_slug = category_dict.get("slug")
-            import sys
-            print(">>> title, category >>", title_name,
-                  category_slug, file=sys.stderr)
-            if Title.objects.filter(
-                name=title_name, category__slug=category_slug
-            ).exists():
-                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    base_model = Review
-    id_name = "review_id"
-    record_name = "review"
-
-    def get_queryset(self):
-        return self.get_base_record().comments.all()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    base_model = Title
-    id_name = "title_id"
-    record_name = "title"
+    permission_classes = (CanPostAndEdit,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
-        return self.get_base_record().reviews.all()
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        return title.reviews.select_related("title").all()  # type:ignore
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, pk=title_id)
+        serializer.save(
+            author=self.request.user,
+            title=title
+        )
+
+    def perform_update(self, serializer):
+        serializer.validated_data.pop("author", None)
+        super().perform_update(serializer)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (CanPostAndEdit,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def get_queryset(self):
+        review_obj = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        return review_obj.comments.all()  # type:ignore
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, pk=self.kwargs.get("review_id"))
+        serializer.save(
+            author=self.request.user,
+            review=review
+        )
+
+    def perform_update(self, serializer):
+        serializer.validated_data.pop("author", None)
+        super().perform_update(serializer)

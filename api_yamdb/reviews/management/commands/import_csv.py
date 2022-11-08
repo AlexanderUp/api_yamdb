@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title  # isort:skip
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title  # isort:skip  # noqa
 
 User = get_user_model()
 
@@ -19,7 +19,8 @@ MODELS = {
     "title": Title,
 }
 
-TABLES = ["category", "genre", "title", "review", "comment", "genre_title"]
+TABLES = ["user", "category", "genre", "title",
+          "review", "comment", "genre_title"]
 
 
 class Command(BaseCommand):
@@ -30,7 +31,6 @@ class Command(BaseCommand):
 
         for table in TABLES:
             path = Path(DIR_PATH, "static", "data", f"{table}.csv")
-            model = MODELS.get(f"{path.stem}")
 
             if path.stem == "user":
                 with path.open() as source:
@@ -65,6 +65,8 @@ class Command(BaseCommand):
                         obj_list, ignore_conflicts=True
                     )
                 continue
+
+            model = MODELS.get(f"{path.stem}")
 
             with path.open() as source:
                 obj_list = []

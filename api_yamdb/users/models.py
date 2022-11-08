@@ -20,7 +20,7 @@ class User(AbstractUser):
         unique=True,
         verbose_name="username",
         help_text=(
-            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."  # noqa
         ),
         validators=[username_validator, me_username_validator],
         error_messages={
