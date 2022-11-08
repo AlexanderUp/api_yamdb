@@ -35,7 +35,9 @@ class CanPostAndEdit(permissions.BasePermission):
         if request.user.is_authenticated:
             if request.user.is_superuser:
                 return True
-            if request.user.role in ("user", "moderator", "admin", "superuser"):
+            if request.user.role in (
+                "user", "moderator", "admin", "superuser"
+            ):
                 return True
         return False
 
