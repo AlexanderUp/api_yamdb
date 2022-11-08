@@ -1,10 +1,12 @@
 """All views and ViewSets."""
 from django.shortcuts import get_object_or_404
+# from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
+from .filters import GenreFilter
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer)
 
@@ -54,7 +56,10 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (CanPostAndEdit,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
+    # filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = GenreFilter
+    # filterset_fields = ('name', 'category', 'genre__slug', 'year')
+    # filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
     http_method_names = ['get', 'post', 'patch', 'delete']
 
 
