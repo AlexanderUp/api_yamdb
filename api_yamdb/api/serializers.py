@@ -85,14 +85,13 @@ class TitleSerializer(serializers.ModelSerializer):
         queryset = object.reviews.all()
         if not queryset:
             return None
-        return sum(review.score for review in queryset) / len(queryset)
+        return int(sum(review.score for review in queryset) / len(queryset))
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field="username",
-        queryset=User.objects.all(),
-        default=serializers.CurrentUserDefault()
+        read_only=True
     )
     score = serializers.IntegerField(
         validators=(
@@ -120,8 +119,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field="username",
-        queryset=User.objects.all(),
-        default=serializers.CurrentUserDefault()
+        read_only=True
     )
 
     class Meta:

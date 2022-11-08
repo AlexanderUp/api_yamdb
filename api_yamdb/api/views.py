@@ -41,18 +41,16 @@ class CategoryViewSet(NoRetrieveModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    queryset = (Title.objects
+                     .select_related("category")
+                     .prefetch_related("genre")
+                     .all())
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = GenreFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
-
-    def get_queryset(self):
-        return (Title.objects
-                     .select_related("category")
-                     .prefetch_related("genre")
-                     .all())
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -67,7 +65,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        serializer.save(title=title)
+        serializer.save(
+            author=self.request.user,
+            title=title
+        )
+
+    def perform_update(self, serializer):
+        serializer.validated_data.pop("author", None)
+        super().perform_update(serializer)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -85,3 +90,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             review=review
         )
+
+    def perform_update(self, serializer):
+        serializer.validated_data.pop("author", None)
+        super().perform_update(serializer)
