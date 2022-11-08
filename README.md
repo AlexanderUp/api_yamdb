@@ -6,7 +6,7 @@
 
 - Клонируем репозиторий:
 
-```git clone https://github.com/AlexanderUp/api_yamdb.git``
+```git clone https://github.com/AlexanderUp/api_yamdb.git```
     
 - Переходим в папку проекта:
 
