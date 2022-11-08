@@ -9,9 +9,6 @@ class IsAdmin(permissions.BasePermission):
             return False
         return request.user.role == "admin" or request.user.is_superuser
 
-    # def has_object_permission(self, request, view, obj):
-    #     return request.user.is_authenticated and request.user.role == "admin"
-
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     message = 'Пользователь не является администратором!'
@@ -28,41 +25,6 @@ class IsAdminOrReadOnly(permissions.BasePermission):
                 or request.user.role == 'admin'):
             return True
         return False
-
-
-# class IsSuperUser(permissions.BasePermission):
-#     message = 'Пользователь не является суперпользователем!'
-
-#     def has_permission(self, request, view):
-#         return request.user.is_authenticated and request.user.is_superuser
-
-#     # def has_object_permission(self, request, view, obj):
-#     #     return request.user.is_authenticated and request.user.is_superuser
-
-
-# class IsOwner(permissions.BasePermission):
-#     message = 'Пользователь не является автором!'
-
-#     def has_permission(self, request, view):
-#         return request.user.is_authenticated
-
-#     def has_object_permission(self, request, view, obj):
-#         if request.method in permissions.SAFE_METHODS:
-#             return True
-#         return request.user == obj.author
-
-
-# class IsModerator(permissions.BasePermission):
-
-#     def has_permission(self, request, view):
-#         if request.method in permissions.SAFE_METHODS:
-#             return True
-#         return request.user.is_authenticated
-
-#     def has_object_permission(self, request, view, obj):
-#         if request.method in permissions.SAFE_METHODS:
-#             return True
-#         return request.user.role == "moderator"
 
 
 class CanPostAndEdit(permissions.BasePermission):

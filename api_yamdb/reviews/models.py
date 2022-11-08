@@ -102,6 +102,11 @@ class Review(models.Model):
             ),
         ]
 
+    # def __str__(self):
+    #     return f"{self.title}"
+    def __str__(self):
+        return self.title.name
+
 
 class Comment(models.Model):
     """Комментарии к отзывам."""
@@ -130,6 +135,9 @@ class Comment(models.Model):
         ordering = ("-id",)
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
+
+    def __str__(self):
+        return f"{self.review}"
 
 
 class GenreTitle(models.Model):

@@ -1,6 +1,5 @@
 """All views and ViewSets."""
 from django.shortcuts import get_object_or_404
-# from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
@@ -15,10 +14,6 @@ from users.permissions import CanPostAndEdit, IsAdmin, IsAdminOrReadOnly  # isor
 
 
 class NoRetrieveModelViewSet(viewsets.ModelViewSet):
-
-    # def update(self, request, *args, **kwargs):
-    #     msg_dict = {"detail": "Method \"PUT\" not allowed."}
-    #     return Response(msg_dict, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def retrieve(self, request, *args, **kwargs):
         msg_dict = {"detail": "Method \"GET\" not allowed."}
@@ -51,21 +46,15 @@ class TitleViewSet(viewsets.ModelViewSet):
                      .prefetch_related("genre")
                      .all())
     serializer_class = TitleSerializer
-    # permission_classes = (AllowAny,)
-    # permission_classes = (IsAdminOrReadOnly,)
-    permission_classes = (CanPostAndEdit,)
+    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    # filter_backends = (filters.DjangoFilterBackend,)
     filter_class = GenreFilter
-    # filterset_fields = ('name', 'category', 'genre__slug', 'year')
-    # filterset_fields = ('name', 'category__slug', 'genre__slug', 'year')
     http_method_names = ['get', 'post', 'patch', 'delete']
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    # permission_classes = (IsAdminOrReadOnly,)
     permission_classes = (CanPostAndEdit,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
@@ -85,3 +74,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         review_obj = get_object_or_404(Review, id=self.kwargs.get('review_id'))
         return review_obj.comments.all()  # type:ignore
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, pk=self.kwargs.get("review_id"))
+        serializer.save(
+            author=self.request.user,
+            review=review
+        )

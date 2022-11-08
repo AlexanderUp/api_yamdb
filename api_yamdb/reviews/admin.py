@@ -8,15 +8,16 @@ class CategoryAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
+class GenreAdmin(admin.ModelAdmin):
+    list_display = ("pk", "name", "slug")
+    search_fields = ("name",)
+    empty_value_display = "-пусто-"
+
+
 class TitleAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "year", "category", "description",)
     list_select_related = ("category",)
     empty_value_display = "-пусто-"
-
-
-class GenreAdmin(admin.ModelAdmin):
-    list_display = ("pk", "name", "slug")
-    search_fields = ("name",)
 
 
 class ReviewAdmin(admin.ModelAdmin):
@@ -29,7 +30,7 @@ class ReviewAdmin(admin.ModelAdmin):
 
 class CommentAdmin(admin.ModelAdmin):
     list_display = ("pk", "author", "review", "pub_date",)
-    list_select_related = ("author", "review",)
+    # list_select_related = ("author", "review__title",)
     search_fields = ("title", "author",)
     list_filter = ("review", "author", "pub_date",)
     empty_value_display = "-пусто-"
@@ -41,8 +42,8 @@ class GenreTitleAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Category, CategoryAdmin)
-admin.site.register(Title, TitleAdmin)
 admin.site.register(Genre, GenreAdmin)
+admin.site.register(Title, TitleAdmin)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(GenreTitle, GenreTitleAdmin)
