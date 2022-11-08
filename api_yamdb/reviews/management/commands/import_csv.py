@@ -12,7 +12,6 @@ User = get_user_model()
 DIR_PATH = settings.BASE_DIR
 
 MODELS = {
-    "user": User,
     "category": Category,
     "comment": Comment,
     "genre": Genre,
@@ -32,7 +31,6 @@ class Command(BaseCommand):
 
         for table in TABLES:
             path = Path(DIR_PATH, "static", "data", f"{table}.csv")
-            model = MODELS.get(f"{path.stem}")
 
             if path.stem == "user":
                 with path.open() as source:
@@ -67,6 +65,8 @@ class Command(BaseCommand):
                         obj_list, ignore_conflicts=True
                     )
                 continue
+
+            model = MODELS.get(f"{path.stem}")
 
             with path.open() as source:
                 obj_list = []

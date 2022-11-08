@@ -19,11 +19,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-    @classmethod
-    def get_default_pk(cls):
-        obj, created = cls.objects.get_or_create(name="No category")
-        return obj.pk
-
 
 class Genre(models.Model):
     """Категории жанров."""
@@ -42,14 +37,13 @@ class Genre(models.Model):
 
 class Title(models.Model):
     """
-    Произведения, к которым пишут отзывы (определённый фильм, книга или песенка).
+    Произведения, к которым пишут отзывы (определённый фильм, книга или песня).
     """
     name = models.CharField(max_length=256)
     year = models.PositiveSmallIntegerField()
     category = models.ForeignKey(
         Category,
-        on_delete=models.SET_DEFAULT,
-        default=Category.get_default_pk
+        on_delete=models.PROTECT,
     )
     description = models.TextField(blank=True, null=True)
     genre = models.ManyToManyField(Genre, through="GenreTitle")
@@ -82,12 +76,10 @@ class Review(models.Model):
         help_text="Введите текст отзыва")
     title = models.ForeignKey(
         Title,
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-        verbose_name="Произведение",
         related_name="reviews",
-        help_text="Произведение на которое написан отзыв")
+        on_delete=models.CASCADE,
+        verbose_name="Произведение",
+        help_text="Произведение, на которое написан отзыв")
     pub_date = models.DateTimeField(
         "Дата публикации отзыва",
         auto_now_add=True,
@@ -99,7 +91,7 @@ class Review(models.Model):
             MinValueValidator(1),
             MaxValueValidator(10)
         ],
-        help_text="Введдите оценку")
+        help_text="Введите оценку")
 
     class Meta:
         ordering = ("-id",)
@@ -125,8 +117,6 @@ class Comment(models.Model):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         verbose_name="Отзыв",
         related_name="comments",
         help_text="Отзыв, к которому написан комментарий")

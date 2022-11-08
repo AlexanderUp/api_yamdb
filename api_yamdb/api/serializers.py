@@ -1,8 +1,8 @@
 """All Serializers."""
 import sys
 from datetime import datetime as dt
-from collections import OrderedDict
 
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -11,6 +11,8 @@ from .validators import (validate_category_slug_existance,
                          validate_genre_slug_existance)
 
 from reviews.models import Category, Comment, Genre, Review, Title  # isort:skip
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -37,6 +39,7 @@ class CategoryLightSerializer(CategorySerializer):
         data = {"slug": data}
         return super().to_internal_value(data)
 
+
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -62,14 +65,11 @@ class GenreLightSerializer(GenreSerializer):
 
     def to_internal_value(self, data):
         data = {"slug": data}
-
         return super().to_internal_value(data)
-        
-    def to_representation(self, data):
-        data = data
-        value = super().to_representation(data)
-       
-        return value['slug']
+
+    # def to_representation(self, data):
+    #     value = super().to_representation(data)
+    #     return value['slug']
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -87,14 +87,17 @@ class TitleSerializer(serializers.ModelSerializer):
             )
         return value
 
-    # def validate(self, validated_data):
-    #     name = validated_data.get("name")
-    #     category = validated_data.get("category")
-    #     category_slug = category.get("slug")
+    def validate(self, validated_data):
+        request = self.context.get("request")
+        if request and request.method != 'POST':
+            return validated_data
+        name = validated_data.get("name")
+        category = validated_data.get("category")
+        category_slug = category.get("slug")
 
-    #     if Title.objects.filter(name=name, category__slug=category_slug).exists():
-    #         raise serializers.ValidationError("Title already exists.")
-    #     return validated_data
+        if Title.objects.filter(name=name, category__slug=category_slug).exists():
+            raise serializers.ValidationError("Title already exists.")
+        return validated_data
 
     def create(self, validated_data):
         category_data = validated_data.pop("category")
@@ -107,10 +110,9 @@ class TitleSerializer(serializers.ModelSerializer):
         genre_list = Genre.objects.filter(slug__in=genre_slug_list)
         print("********** genre_list", genre_list, file=sys.stderr)
 
-        title = Title.objects.create(**validated_data)
-        title.category = category
+        validated_data["category"] = category
+        title = Title.objects.create(**validated_data,)
         title.genre.set(genre_list)
-        title.save()
         print("********** title", title, file=sys.stderr)
         print("********** title.genre", title.genre.all(), file=sys.stderr)
         return title
@@ -136,7 +138,9 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        slug_field='username',
+        queryset=User.objects.all(),
+        default=serializers.CurrentUserDefault()
     )
     score = serializers.IntegerField(
         validators=(
@@ -149,24 +153,38 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ('id', 'author', 'text', 'score', 'pub_date')
 
-    def validate(self, data):
-        if self.context['request'].method != 'POST':
-            return data
-        title_id = self.context['view'].kwargs.get('title_id')
-        title = get_object_or_404(Title, pk=title_id)
-        user = self.context['request'].user
-        if Review.objects.filter(title=title, author=user).exists():
-            raise serializers.ValidationError(
-                'Можно оставить только один отзыв на произведение'
-            )
-        return data
+    def validate(self, validated_data):
+        request = self.context.get("request")
+        if request and request.method == 'POST':
+            title_id = self.context['view'].kwargs.get('title_id')
+            title = get_object_or_404(Title, pk=title_id)
+            user = self.context['request'].user
+            if Review.objects.filter(title=title, author=user).exists():
+                raise serializers.ValidationError(
+                    'Можно оставить только один отзыв на произведение'
+                )
+        return validated_data
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        slug_field='username',
+        queryset=User.objects.all(),
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
+
+    # def validate(self, validated_data):
+    #     request = self.context.get("request")
+    #     if request and request.method == 'POST':
+    #         title_id = self.context['view'].kwargs.get('title_id')
+    #         title = get_object_or_404(Title, pk=title_id)
+    #         user = self.context['request'].user
+    #         if Review.objects.filter(title=title, author=user).exists():
+    #             raise serializers.ValidationError(
+    #                 'Можно оставить только один отзыв на произведение'
+    #             )
+    #     return validated_data
