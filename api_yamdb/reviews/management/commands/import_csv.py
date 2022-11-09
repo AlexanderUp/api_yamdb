@@ -29,7 +29,6 @@ class Command(BaseCommand):
     help = u'Импорт из csv файла в базу данных'
 
     def handle(self, *args, **kwargs):
-        # создание пользователей средствами Django ORM
 
         for table in TABLES:
             path = Path(DIR_PATH, "static", "data", f"{table}.csv")
