@@ -1,7 +1,8 @@
+from collections import namedtuple
+
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from collections import namedtuple
 
 from .utils import set_confirmation_code
 from .validators import me_username_validator

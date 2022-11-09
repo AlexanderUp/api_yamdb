@@ -158,25 +158,25 @@ class Comment(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="comments",
-        verbose_name="Автор",
-        help_text="Автор комментария"
+        verbose_name="author",
+        help_text="Comment's author"
     )
     text = models.TextField(
-        "Текст комментария",
-        help_text="Введите текст комментария"
+        verbose_name="text",
+        help_text="Text of comment"
     )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        verbose_name="Отзыв",
         related_name="comments",
-        help_text="Отзыв, к которому написан комментарий"
+        verbose_name="review",
+        help_text="Review that is comment's subject"
     )
     pub_date = models.DateTimeField(
-        "Дата публикации комментария",
         db_index=True,
         auto_now_add=True,
-        help_text="Дата публикации комментария"
+        verbose_name="pub_date",
+        help_text="Date of comment publication"
     )
 
     class Meta:

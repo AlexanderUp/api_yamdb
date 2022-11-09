@@ -92,7 +92,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (CanPostAndEdit,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
         review_obj = get_object_or_404(Review, id=self.kwargs.get('review_id'))
