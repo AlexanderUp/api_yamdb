@@ -1,29 +1,33 @@
 """All Serializers."""
-from datetime import datetime as dt
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.shortcuts import get_list_or_404, get_object_or_404
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import serializers
-from reviews.models import Category, Comment, Genre, Review, Title
+
+from reviews.models import (Category, Comment,  # isort:skip
+                            Genre, Review, Title)
 
 User = get_user_model()
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class NameSlugSerializer(serializers.ModelSerializer):
 
     class Meta:
+        lookup_field = "slug"
+        exclude = ("id",)
+
+
+class CategorySerializer(NameSlugSerializer):
+
+    class Meta(NameSlugSerializer.Meta):
         model = Category
-        lookup_field = "slug"
-        fields = ("name", "slug")
 
 
-class GenreSerializer(serializers.ModelSerializer):
+class GenreSerializer(NameSlugSerializer):
 
-    class Meta:
+    class Meta(NameSlugSerializer.Meta):
         model = Genre
-        lookup_field = "slug"
-        fields = ("name", "slug")
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -36,6 +40,35 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field="slug",
         queryset=Category.objects.all(),
     )
+
+    class Meta:
+        model = Title
+        fields = ("id", "name", "year", "description",
+                  "genre", "category",)
+
+    def validate_year(self, value):
+        if value > timezone.now().year:
+            raise serializers.ValidationError(
+                "Год выпуска не может быть больше текущего!"
+            )
+        return value
+
+    def validate(self, validated_data):
+        request = self.context.get("request")
+        if request and request.method != "POST":
+            return validated_data
+
+        if Title.objects.filter(
+            name=validated_data.get("name"),
+            category=validated_data.get("category")
+        ).exists():
+            raise serializers.ValidationError("Title already exists.")
+        return validated_data
+
+
+class TitleReadOnlySerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -43,48 +76,8 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "year", "description",
                   "genre", "category", "rating",)
 
-    def validate_year(self, value):
-        if value > dt.now().year:
-            raise serializers.ValidationError(
-                "Год выпуска не может быть больше текущего!"
-            )
-        return value
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        genre_slug_list = representation.pop("genre")
-        category_slug = representation.pop("category")
-        category_obj = get_object_or_404(Category, slug=category_slug)
-        representation["category"] = {
-            "name": category_obj.name,
-            "slug": category_slug
-        }
-        genre_obj_list = get_list_or_404(Genre, slug__in=genre_slug_list)
-        genre_representation_list = [
-            {
-                "name": genre.name, "slug": genre.slug
-            } for genre in genre_obj_list
-        ]
-        representation["genre"] = genre_representation_list
-        return representation
-
-    def validate(self, validated_data):
-        request = self.context.get("request")
-        if request and request.method != "POST":
-            return validated_data
-        name = validated_data.get("name")
-
-        if Title.objects.filter(
-            name=name, category=validated_data.get("category")
-        ).exists():
-            raise serializers.ValidationError("Title already exists.")
-        return validated_data
-
     def get_rating(self, object):
-        queryset = object.reviews.all()
-        if not queryset:
-            return None
-        return int(sum(review.score for review in queryset) / len(queryset))
+        return object.rating
 
 
 class ReviewSerializer(serializers.ModelSerializer):

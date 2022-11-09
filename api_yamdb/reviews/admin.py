@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Category, Comment, Genre, GenreTitle, Review, Title
+from .models import Category, Comment, Genre, Review, Title
+# from .models import Category, Comment, Genre, GenreTitle, Review, Title
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -32,9 +33,9 @@ class CommentAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
-class GenreTitleAdmin(admin.ModelAdmin):
-    list_display = ("pk", "genre", "title",)
-    list_select_related = ("genre", "title",)
+# class GenreTitleAdmin(admin.ModelAdmin):
+#     list_display = ("pk", "genre", "title",)
+#     list_select_related = ("genre", "title",)
 
 
 admin.site.register(Category, CategoryAdmin)
@@ -42,4 +43,4 @@ admin.site.register(Genre, GenreAdmin)
 admin.site.register(Title, TitleAdmin)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Comment, CommentAdmin)
-admin.site.register(GenreTitle, GenreTitleAdmin)
+# admin.site.register(GenreTitle, GenreTitleAdmin)
