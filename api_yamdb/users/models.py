@@ -5,15 +5,20 @@ from django.db import models
 from .utils import set_confirmation_code
 from .validators import me_username_validator
 
-USER_ROLE_CHOICES = (
-    ("user", "user"),
-    ("moderator", "moderator"),
-    ("admin", "admin"),
-    ("superuser", "superuser"),
-)
-
 
 class User(AbstractUser):
+    USER = "user"
+    MODERATOR = "moderator"
+    ADMIN = "admin"
+    SUPERUSER = "superuser"
+
+    ROLES = [
+        (USER, "user"),
+        (MODERATOR, "moderator"),
+        (ADMIN, "admin"),
+        (SUPERUSER, "superuser"),
+    ]
+
     username_validator = UnicodeUsernameValidator()
     username = models.CharField(
         max_length=150,
@@ -46,8 +51,8 @@ class User(AbstractUser):
         max_length=16,
         verbose_name="Role",
         help_text="User's role",
-        choices=USER_ROLE_CHOICES,
-        default="user"
+        choices=ROLES,
+        default=USER
     )
     confirmation_code = models.CharField(
         max_length=16,
@@ -56,6 +61,22 @@ class User(AbstractUser):
         verbose_name="confirmation_code",
         help_text="Confirmation code"
     )
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
+
+    @property
+    def is_super(self):
+        return self.role == self.SUPERUSER or self.is_superuser
 
     class Meta(AbstractUser.Meta):
         ordering = ("-id",)
