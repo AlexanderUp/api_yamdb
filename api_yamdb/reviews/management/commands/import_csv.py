@@ -28,7 +28,7 @@ TABLES = ["user", "category", "genre", "title",
 class Command(BaseCommand):
     help = u'Импорт из csv файла в базу данных'
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs):  # noqa
 
         for table in TABLES:
             path = Path(DIR_PATH, "static", "data", f"{table}.csv")
