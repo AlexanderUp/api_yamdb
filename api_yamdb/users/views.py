@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -39,7 +39,6 @@ class UserSignupAPIView(APIView):
 
         send_confirmation_code(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-        
 
 
 class TokenObtainAPIView(APIView):
@@ -50,7 +49,6 @@ class TokenObtainAPIView(APIView):
 
     def post(self, request):
         serializer = UserTokenObtainingSerializer(data=request.data)
-
         serializer.is_valid(raise_exception=True)
 
         username = serializer.validated_data.get("username")
@@ -75,7 +73,7 @@ class TokenObtainAPIView(APIView):
         }
         return Response(
             resp, status=status.HTTP_200_OK
-            )
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -86,30 +84,25 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = "username"
     permission_classes = (IsAdmin,)
-    http_method_names = ["get", "post", "patch", "delete", ]
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if request.user.username == instance.username:
-            serializer_class = self.get_serializer_class()
-            serializer = serializer_class(instance)
-            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
+        if request.user.pk == instance.pk:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class UserAPIView(RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
-    http_method_names = ["get", "patch"]
-
-    def get_object(self):
-        obj = get_object_or_404(
-            User, username=self.request.user.username  # type:ignore
-        )
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-    def perform_update(self, serializer):
-        if "role" in serializer.validated_data:
-            serializer.validated_data.pop("role")
-        return super().perform_update(serializer)
+    @action(detail=False,
+            methods=["get", "patch"],
+            permission_classes=[permissions.IsAuthenticated])
+    def me(self, request):
+        serializer_class = self.get_serializer_class()
+        if request.method == "PATCH":
+            serializer = serializer_class(
+                request.user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.validated_data.pop("role", None)
+            serializer.save()
+        serializer = serializer_class(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

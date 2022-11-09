@@ -1,4 +1,5 @@
 import csv
+from collections import defaultdict
 from pathlib import Path
 
 from django.conf import settings
@@ -6,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from reviews.models import (Category, Comment, Genre,  # isort:skip  # noqa
-                            GenreTitle, Review, Title)
+                            Review, Title)
 
 User = get_user_model()
 
@@ -46,8 +47,8 @@ class Command(BaseCommand):
                 continue
 
             if path.stem == "genre_title":
+                obj_dict = defaultdict(list)
                 with path.open() as source:
-                    obj_list = []
                     csv_reader = csv.reader(source, delimiter=",")
                     header = None
                     for row in csv_reader:
@@ -57,14 +58,9 @@ class Command(BaseCommand):
                         keyargs = dict(zip(header, row))
                         title = Title.objects.get(pk=keyargs.get("title_id"))
                         genre = Genre.objects.get(pk=keyargs.get("genre_id"))
-                        obj_list.append(GenreTitle(
-                            pk=keyargs.get("id"),
-                            title=title,
-                            genre=genre,
-                        ))
-                    GenreTitle.objects.bulk_create(
-                        obj_list, ignore_conflicts=True
-                    )
+                        obj_dict[title].append(genre)
+                for title in obj_dict:
+                    title.genre.set(obj_dict[title], clear=True)
                 continue
 
             model = MODELS.get(f"{path.stem}")

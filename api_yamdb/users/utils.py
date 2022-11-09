@@ -5,6 +5,9 @@ from django.core.mail import send_mail
 
 
 def set_confirmation_code(size=settings.CONFIRMATION_CODE_BYTE_SIZE):
+    """
+    With UUID can not pass Yandex tests.
+    """
     return os.urandom(size).hex()
 
 

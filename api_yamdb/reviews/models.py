@@ -82,7 +82,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through="GenreTitle",
         verbose_name="genre",
         help_text="Title genre set"
     )
@@ -186,23 +185,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.review}"
-
-
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE,
-        verbose_name="genre_id",
-        help_text="Genre ID",
-    )
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        verbose_name="title_id",
-        help_text="Title ID",
-    )
-
-    class Meta:
-        ordering = ("-id",)
-        verbose_name = "GenreTitle"
-        verbose_name_plural = "GenreTitles"
