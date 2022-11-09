@@ -25,55 +25,66 @@ TABLES = ["user", "category", "genre", "title",
           "review", "comment", "genre_title"]
 
 
+def process_users(path):
+    with path.open() as source:
+        csv_reader = csv.reader(source, delimiter=",")
+        header = None
+        for row in csv_reader:
+            if not header:
+                header = row
+                continue
+            keyargs = dict(zip(header, row))
+            User.objects.create_user(**keyargs)  # type:ignore
+
+
+def process_genre_title(path):
+    obj_dict = defaultdict(list)
+    with path.open() as source:
+        csv_reader = csv.reader(source, delimiter=",")
+        header = None
+        for row in csv_reader:
+            if not header:
+                header = row
+                continue
+            keyargs = dict(zip(header, row))
+            title = Title.objects.get(pk=keyargs.get("title_id"))
+            genre = Genre.objects.get(pk=keyargs.get("genre_id"))
+            obj_dict[title].append(genre)
+    for title in obj_dict:
+        title.genre.set(obj_dict[title], clear=True)
+
+
+def process_table(model, path):
+    with path.open() as source:
+        obj_list = []
+        csv_reader = csv.reader(source, delimiter=",")
+        header = None
+        for row in csv_reader:
+            if not header:
+                header = row
+                continue
+            keyargs = dict(zip(header, row))
+            obj_list.append(model(**keyargs))  # type:ignore
+        model.objects.bulk_create(  # type:ignore
+            obj_list, ignore_conflicts=True
+        )
+
+
 class Command(BaseCommand):
     help = u'Импорт из csv файла в базу данных'
 
-    def handle(self, *args, **kwargs):  # noqa
+    def handle(self, *args, **kwargs):
 
         for table in TABLES:
             path = Path(DIR_PATH, "static", "data", f"{table}.csv")
 
             if path.stem == "user":
-                with path.open() as source:
-                    csv_reader = csv.reader(source, delimiter=",")
-                    header = None
-                    for row in csv_reader:
-                        if not header:
-                            header = row
-                            continue
-                        keyargs = dict(zip(header, row))
-                        User.objects.create_user(**keyargs)  # type:ignore
+                process_users(path)
                 continue
 
             if path.stem == "genre_title":
-                obj_dict = defaultdict(list)
-                with path.open() as source:
-                    csv_reader = csv.reader(source, delimiter=",")
-                    header = None
-                    for row in csv_reader:
-                        if not header:
-                            header = row
-                            continue
-                        keyargs = dict(zip(header, row))
-                        title = Title.objects.get(pk=keyargs.get("title_id"))
-                        genre = Genre.objects.get(pk=keyargs.get("genre_id"))
-                        obj_dict[title].append(genre)
-                for title in obj_dict:
-                    title.genre.set(obj_dict[title], clear=True)
+                process_genre_title(path)
                 continue
 
             model = MODELS.get(f"{path.stem}")
-
-            with path.open() as source:
-                obj_list = []
-                csv_reader = csv.reader(source, delimiter=",")
-                header = None
-                for row in csv_reader:
-                    if not header:
-                        header = row
-                        continue
-                    keyargs = dict(zip(header, row))
-                    obj_list.append(model(**keyargs))  # type:ignore
-                model.objects.bulk_create(  # type:ignore
-                    obj_list, ignore_conflicts=True
-                )
+            process_table(model, path)
