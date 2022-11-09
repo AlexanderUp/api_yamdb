@@ -131,7 +131,7 @@ class Review(models.Model):
     score = models.IntegerField(
         validators=[
             MinValueValidator(1, "Score can not be less than one."),
-            MaxValueValidator(10, "Score can not be great than ten.")
+            MaxValueValidator(10, "Score can not be more than ten.")
         ],
         verbose_name="score",
         help_text="Review's title score"

@@ -1,16 +1,25 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+from collections import namedtuple
 
 from .utils import set_confirmation_code
 from .validators import me_username_validator
 
-USER_ROLE_CHOICES = (
-    ("user", "user"),
-    ("moderator", "moderator"),
-    ("admin", "admin"),
-    ("superuser", "superuser"),
-)
+role_tuple = namedtuple("info", ["name", "role"])
+USER = role_tuple("user", "user")
+MODERATOR = role_tuple("moderator", "moderator")
+ADMIN = role_tuple("admin", "admin")
+SUPERUSER = role_tuple("superuser", "superuser")
+
+USER_ROLE_CHOICES = [USER, MODERATOR, ADMIN, SUPERUSER]
+
+# USER_ROLE_CHOICES = (
+#     ("user", "user"),
+#     ("moderator", "moderator"),
+#     ("admin", "admin"),
+#     ("superuser", "superuser"),
+# )
 
 
 class User(AbstractUser):
@@ -47,7 +56,7 @@ class User(AbstractUser):
         verbose_name="Role",
         help_text="User's role",
         choices=USER_ROLE_CHOICES,
-        default="user"
+        default=USER.role
     )
     confirmation_code = models.CharField(
         max_length=16,
