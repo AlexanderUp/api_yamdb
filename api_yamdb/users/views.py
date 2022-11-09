@@ -24,23 +24,22 @@ class UserSignupAPIView(APIView):
 
     def post(self, request):
         serializer = UserSignupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if serializer.is_valid():
+        try:
+            user, created = User.objects.get_or_create(**serializer.data)
+        except IntegrityError:
+            return Response(
+                serializer.data, status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            if created:
+                user.set_unusable_password()  # type:ignore
+                user.save()
 
-            try:
-                user, created = User.objects.get_or_create(**serializer.data)
-            except IntegrityError:
-                return Response(
-                    serializer.data, status=status.HTTP_400_BAD_REQUEST
-                )
-            else:
-                if created:
-                    user.set_unusable_password()  # type:ignore
-                    user.save()
-
-            send_confirmation_code(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        send_confirmation_code(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
 
 
 class TokenObtainAPIView(APIView):
@@ -52,32 +51,31 @@ class TokenObtainAPIView(APIView):
     def post(self, request):
         serializer = UserTokenObtainingSerializer(data=request.data)
 
-        if serializer.is_valid():
+        serializer.is_valid(raise_exception=True)
 
-            username = serializer.data.get("username")
-            confirmation_code = serializer.data.get("confirmation_code")
+        username = serializer.validated_data.get("username")
+        confirmation_code = serializer.validated_data.get("confirmation_code")
 
-            if not User.objects.filter(username=username).exists():
-                return Response(status=status.HTTP_404_NOT_FOUND)
+        if not User.objects.filter(username=username).exists():
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-            if not User.objects.filter(
-                confirmation_code=confirmation_code
-            ).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not User.objects.filter(
+            confirmation_code=confirmation_code
+        ).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            user = get_object_or_404(
-                User,
-                username=username,
-                confirmation_code=confirmation_code
+        user = get_object_or_404(
+            User,
+            username=username,
+            confirmation_code=confirmation_code
+        )
+        refresh_token = RefreshToken.for_user(user)
+        resp = {
+            "token": str(refresh_token.access_token)
+        }
+        return Response(
+            resp, status=status.HTTP_200_OK
             )
-            refresh_token = RefreshToken.for_user(user)
-            resp = {
-                "token": str(refresh_token.access_token)
-            }
-            return Response(
-                resp, status=status.HTTP_200_OK
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ModelViewSet):

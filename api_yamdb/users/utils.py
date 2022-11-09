@@ -1,6 +1,7 @@
 import os
 
 from django.conf import settings
+from api_yamdb.settings import ADMIN_EMAIL
 from django.core.mail import send_mail
 
 
@@ -12,6 +13,6 @@ def send_confirmation_code(user_obj):
     send_mail(
         "Confirmation code",
         f"Your confirmation code is {user_obj.confirmation_code}.",
-        "admin@example.com",
+        ADMIN_EMAIL,
         [user_obj.email],
     )

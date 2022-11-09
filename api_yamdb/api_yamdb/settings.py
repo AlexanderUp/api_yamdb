@@ -158,3 +158,5 @@ LOGGING = {
 CONFIRMATION_CODE_BYTE_SIZE = 8
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+ADMIN_EMAIL = "admin@example.com"
