@@ -10,9 +10,7 @@ from .mixins import CommonViewSetMixin, NoAuthorUpdateMixin
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleReadOnlySerializer, TitleSerializer)
-
-# can't override isort missing blank line error
-from reviews.models import Category, Genre, Review, Title  # isort:skip
+from reviews.models import Category, Genre, Review, Title  # isort:skip # noqa
 from users.permissions import CanPostAndEdit, IsAdminOrReadOnly  # isort:skip
 
 
