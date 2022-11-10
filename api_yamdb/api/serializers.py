@@ -30,6 +30,9 @@ class GenreSerializer(NameSlugSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """
+    Designated for title instance creation or update.
+    """
     genre = serializers.SlugRelatedField(
         slug_field="slug",
         queryset=Genre.objects.all(),
@@ -54,18 +57,19 @@ class TitleSerializer(serializers.ModelSerializer):
 
     def validate(self, validated_data):
         request = self.context.get("request")
-        if request and request.method != "POST":
-            return validated_data
-
-        if Title.objects.filter(
-            name=validated_data.get("name"),
-            category=validated_data.get("category")
-        ).exists():
-            raise serializers.ValidationError("Title already exists.")
+        if request and request.method == "POST":
+            if Title.objects.filter(
+                name=validated_data.get("name"),
+                category=validated_data.get("category")
+            ).exists():
+                raise serializers.ValidationError("Title already exists.")
         return validated_data
 
 
 class TitleReadOnlySerializer(serializers.ModelSerializer):
+    """
+    Designated for title instance listing or retrieving.
+    """
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
     rating = serializers.IntegerField()
